@@ -27,7 +27,10 @@ import sys
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-import PySimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    sg = None  # type: ignore[assignment]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -116,6 +119,9 @@ class GameUI:
     TEXT_COL = "#000000"
 
     def __init__(self):
+        if sg is None:  # pragma: no cover - defensive guard
+            raise ImportError("PySimpleGUI is required to use GameUI")
+
         self.board_area: sg.Graph
         self.table: sg.Table
         self.window: sg.Window
@@ -274,12 +280,20 @@ class GameUI:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def main():
+    if sg is None:  # pragma: no cover - defensive guard
+        raise ImportError("PySimpleGUI is required to run the GUI")
     ui = GameUI()
     ui.run()
 
 
 if __name__ == "__main__":
     if sys.version_info < (3, 9):
-        sg.popup_error("Python 3.9+ is required.")
+        if sg is not None:
+            sg.popup_error("Python 3.9+ is required.")
+        else:
+            print("Python 3.9+ is required.", file=sys.stderr)
+        sys.exit(1)
+    if sg is None:
+        print("PySimpleGUI is required to run this application.", file=sys.stderr)
         sys.exit(1)
     main()
